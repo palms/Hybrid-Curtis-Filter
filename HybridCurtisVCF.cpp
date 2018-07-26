@@ -24,11 +24,11 @@ void HybridCurtisVCF::makeCurtis (double sampleRate,
                                          double resonance) noexcept
 {
     
-    //NOTE! check these for safety
+    //NOTE! need the following safety checks
     /*
-    jassert (sampleRate > 0.0);
-    jassert (frequency > 0.0 && frequency <= sampleRate * 0.5);
-    jassert (resonance => 0.0 && resonance <= 1.0);
+     sample rate is above 0
+     frequency is below nyquist
+     resonance is in range
      */
     
     //core variables
@@ -69,28 +69,22 @@ void HybridCurtisVCF::processSamples (float* const samples, const int numSamples
         
         for (int i = 0; i < numSamples; i++)
         {
-            //grab single sample for safe keeping
             sample = samples[i];
             
-             //--Inverted feed back for corner peaking
             c0 = sample - r * c4;
             
-            //Four cascaded onepole filters (bilinear transform)
             c1 = c0 * p + oldC0 * p - k * c1;
             c2 = c1 * p + oldC1 * p - k * c2;
             c3 = c2 * p + oldC2 * p - k * c3;
             c4 = c3 * p + oldC3 * p - k * c4;
             
-            //save old coeffs
             oldC0 = c0;
             oldC1 = c1;
             oldC2 = c2;
             oldC3 = c3;
             
-            //Clipper band limited sigmoid
             c4 = c4 - pow(c4, 3.f) / 6.f;
             
-            //replace sample
             samples[i] = c4;
         }
     }
